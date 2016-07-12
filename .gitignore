@@ -1,0 +1,3 @@
+*.py[cod]
+svn/**
+sbmtools/*.py[cod]
