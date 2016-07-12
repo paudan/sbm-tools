@@ -5,6 +5,7 @@ import urllib, urllib2
 from urllib2 import HTTPError, URLError
 import webbrowser
 import requests
+from requests.exceptions import RequestException
 from configparser import ConfigParser
 
 PINTEREST_OAUTH = "https://api.pinterest.com/oauth/?"
@@ -30,7 +31,7 @@ class PinterestAPI:
                   'scope': 'read_public,write_public'}
         opener = urllib2.build_opener(urllib2.HTTPRedirectHandler)
         webbrowser.open(PINTEREST_OAUTH + urllib.urlencode(params))
-        code = raw_input('Enter the given code: ')
+        code = raw_input('Enter the code in the URL: ')
         params = {'client_id' : self.appid,
                   'client_secret': self.secret,
                   'grant_type': 'authorization_code',
@@ -89,14 +90,28 @@ class PinterestAPI:
             return None, None
         imported = not_imported = []
         for item in items:
-            params = {'access_token': self.token, 'board' : board_name,
-                      'note': item[0].encode('utf-8'),
-                      'link': item[1], 'image_url': item[1] }
-            print "Posting image'%s'" % item[1]
-            try:
-                r = requests.post(PINTEREST_PINS + '?' + urllib.urlencode(params))
+            imgid = self.post_single_picture(item[1], item[0], board_name)
+            if imgid:
                 imported.append(item)
-            except Exception as e:
-                print "Error importing '%s'" % item[1]
+            else:
                 not_imported.append(item)
         return imported, not_imported
+
+
+    def post_single_picture(self, url, img_name, board_name, link=None):
+        params = {'access_token': self.token, 'board' : board_name,
+                  'note': img_name.encode('utf-8'),
+                  'link': link if link is not None else url,
+                  'image_url': url }
+        print "Posting image'%s'" % url
+        result = None
+        try:
+            r = requests.post(PINTEREST_PINS + '?' + urllib.urlencode(params))
+            result = r.json()
+        except RequestException as e:
+            print "Error importing '%s'" % url
+        if result and result.has_key('data'):
+            return result['data']['id']
+        else:
+            return None
+
