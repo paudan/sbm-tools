@@ -184,7 +184,7 @@ class MyVidsterAPI:
         return data
 
 
-    def get_all_bookmarks(self, links, pause=True, batch_size=50, time_=30):
+    def get_all_bookmarks(self, links, pause=True, batch_size=50, time_=120):
         if not self.loggedin:
             raise NotConnectedException('You must call login() in order to use this method!')
         data = {}
