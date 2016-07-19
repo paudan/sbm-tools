@@ -4,6 +4,7 @@ from lxml.html import document_fromstring  # pip install lxml && pip install css
 from configparser import ConfigParser
 import mechanize
 from time import sleep
+from .progress import SimpleProgressBar
 
 VISUALIZEUS_URL = 'http://vi.sualize.us/'
 
@@ -76,7 +77,7 @@ class VisualizeUsAPI:
         data = {}
         id, batch = 1, 1
         taglist = set()
-        print 'Reading links %d-%d' % (id, id + batch_size - 1)
+        progbar = SimpleProgressBar(len(links))
         for link in links:
             response = self.br.open(link)
             content = response.read().decode('utf-8')
@@ -95,15 +96,14 @@ class VisualizeUsAPI:
                 tags.append(tg)
                 taglist.add(tg)
             data[id] = {'title': title, 'image_url': img, 'link': link, 'tags': tags}
+            progbar.update(id)
             if pause and batch_size > 0 and batch == batch_size:
-                print 'Read links %d-%d' % (id - batch + 1, id)
                 if not time_ is None and time_ > 0:
-                    print 'Waiting for %d s' % time_
+                    progbar.pause(time_)
                 batch = 0
-                sleep(time_)
-                print 'Reading links %d-%d' % (id + 1, id + batch_size)
             id += 1
             batch += 1
+        progbar.finish()
         return data, taglist
 
 
