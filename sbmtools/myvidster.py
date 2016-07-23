@@ -14,7 +14,8 @@ import requests
 import urllib
 import hashlib
 from requests.exceptions import RequestException
-from .exceptions import MissingParameterException, NotConnectedException, BookmarkingException
+from .core import CoreAPI
+from .exceptions import MissingParameterException, NotConnectedException, RequestProcessingException
 from .progress import SimpleProgressBar
 
 MYVIDSTER_URL = 'http://www.myvidster.com/'
@@ -23,7 +24,7 @@ MYVIDSTER_URL = 'http://www.myvidster.com/'
 Reads links myvidster.com.us website and processes them for further import or export
 operations. Currently only scraping mode is supported
 """
-class MyVidsterAPI:
+class MyVidsterAPI(CoreAPI):
 
     def __init__(self, config):
         conf = ConfigParser()
@@ -31,25 +32,25 @@ class MyVidsterAPI:
         self.user = conf.get('myvidster', 'user')
         self.password = conf.get('myvidster', 'password')
         self.loggedin = False
-        self.br = None
+        self.__br = None
 
 
     def login(self):
         url = MYVIDSTER_URL + 'user/'
-        self.br = mechanize.Browser()
-        self.br.set_handle_robots(False)
-        self.br.set_handle_equiv(False)
-        self.br.set_handle_refresh(False)
-        self.br.addheaders = [('User-Agent', 'Firefox'), ('Accept', '*/*')]
-        response = self.br.open(url)
-        for form1 in self.br.forms():
+        self.__br = mechanize.Browser()
+        self.__br.set_handle_robots(False)
+        self.__br.set_handle_equiv(False)
+        self.__br.set_handle_refresh(False)
+        self.__br.addheaders = [('User-Agent', 'Firefox'), ('Accept', '*/*')]
+        response = self.__br.open(url)
+        for form1 in self.__br.forms():
             form = form1
         if form is None:
             return
-        self.br.select_form(nr=1)
+        self.__br.select_form(nr=1)
         form["user_id"] = self.user
         form["password"] = self.password
-        response = self.br.submit()
+        response = self.__br.submit()
         self.loggedin = True
 
 
@@ -61,7 +62,7 @@ class MyVidsterAPI:
     def __parse_page__(self, url, linkfun):
         if not self.loggedin:
             raise NotConnectedException('You must call login() in order to use this method!')
-        response = self.br.open(url + '&entries_per_page=50')
+        response = self.__br.open(url + '&entries_per_page=50')
         content = response.read().decode('utf-8')
         doc = document_fromstring(content)
         links = linkfun(doc)
@@ -141,7 +142,7 @@ class MyVidsterAPI:
 
 
     def __read_bookmark_data__(self, link):
-        response = self.br.open(link)
+        response = self.__br.open(link)
         content = response.read()
         doc = document_fromstring(content)
         h2 = doc.cssselect('div.details_header * h2')
@@ -220,7 +221,7 @@ class MyVidsterAPI:
             root = tree.find('video_details')
             status = root.findtext('status')
             if status != 'Success':
-                raise BookmarkingException(status)
+                raise RequestProcessingException(status)
             else:
                 return {'video_id': root.findtext('video_id'),
                         'title': root.findtext('title'),

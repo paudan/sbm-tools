@@ -6,10 +6,11 @@ import json
 import urllib, urllib2
 from urllib2 import HTTPError, URLError
 from configparser import ConfigParser
+from.core import CoreAPI
 
 DIIGO_API_URL = 'https://secure.diigo.com/api/v2/bookmarks'
 
-class DiigoAPI:
+class DiigoAPI(CoreAPI):
 
     def __init__(self, config):
         conf = ConfigParser()

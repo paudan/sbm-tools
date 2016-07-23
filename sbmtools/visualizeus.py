@@ -3,7 +3,7 @@
 from lxml.html import document_fromstring  # pip install lxml && pip install cssselect
 from configparser import ConfigParser
 import mechanize
-from time import sleep
+from .core import CoreAPI
 from .progress import SimpleProgressBar
 
 VISUALIZEUS_URL = 'http://vi.sualize.us/'
@@ -12,38 +12,38 @@ VISUALIZEUS_URL = 'http://vi.sualize.us/'
 Reads links from vi.sualize.us website and processes them for further import or export
 operations. Only scraping mode supported
 """
-class VisualizeUsAPI:
+class VisualizeUsAPI(CoreAPI):
 
     def __init__(self, config):
         conf = ConfigParser()
         conf.read(config)
         self.user = conf.get('visualizeus', 'user')
         self.password = conf.get('visualizeus', 'password')
-        self.br = None
+        self.__br = None
         self.loggedin = False
 
     def login(self):
         url = VISUALIZEUS_URL + 'login/'
-        self.br = mechanize.Browser()
-        self.br.set_handle_robots(False)
-        self.br.set_handle_equiv(False)
-        self.br.set_handle_refresh(False)
-        self.br.addheaders = [('User-Agent', 'Firefox'), ('Accept', '*/*')]
-        response = self.br.open(url)
-        for form1 in self.br.forms():
+        self.__br = mechanize.Browser()
+        self.__br.set_handle_robots(False)
+        self.__br.set_handle_equiv(False)
+        self.__br.set_handle_refresh(False)
+        self.__br.addheaders = [('User-Agent', 'Firefox'), ('Accept', '*/*')]
+        response = self.__br.open(url)
+        for form1 in self.__br.forms():
             form = form1
             break
-        self.br.select_form(nr=0)
+        self.__br.select_form(nr=0)
         form["login"] = self.user
         form["password"] = self.password
-        response = self.br.submit()
+        response = self.__br.submit()
         self.loggedin = True
 
 
     def get_items(self):
 
         def read_page(url):
-            response = self.br.open(url)
+            response = self.__br.open(url)
             content = response.read().decode('utf-8')
             doc = document_fromstring(content)
             links = []
@@ -79,7 +79,7 @@ class VisualizeUsAPI:
         taglist = set()
         progbar = SimpleProgressBar(len(links))
         for link in links:
-            response = self.br.open(link)
+            response = self.__br.open(link)
             content = response.read().decode('utf-8')
             doc = document_fromstring(content)
             titlediv = doc.cssselect('title')
