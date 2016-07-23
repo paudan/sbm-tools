@@ -1,6 +1,6 @@
 
 from lxml.etree import tostring
-from lxml.html import document_fromstring  # pip install lxml && pip install cssselect
+from lxml.html import document_fromstring
 try:
     from xml.etree import cElementTree as ElementTree
 except ImportError, e:
