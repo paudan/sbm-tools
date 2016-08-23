@@ -50,4 +50,7 @@ class DiigoAPI(CoreAPI):
                     items.extend([link for link in output])
                 except URLError as e:
                     print 'Error while connecting: %s' % e.reason
+        for link in items:
+            if link['tags']:
+                link['tags'] = [tag.strip() for tag in link['tags'].split(',')]
         return items

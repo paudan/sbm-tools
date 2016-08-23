@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='sbm-tools',
+    name='sbmtools',
     version='1.0',
     description='API implementations and analytics tools for various social bookmarking services',
     long_description=long_description,

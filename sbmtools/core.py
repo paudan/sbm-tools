@@ -45,7 +45,7 @@ class CoreAPI:
         content = io.open(filename, 'r', encoding='utf8').read()
         doc = document_fromstring(content)
         return [{'title' : a.text_content().strip(),
-                 'tags': a.get('shortcuturl').split() if a.get('shortcuturl') else [],
+                 'tags': a.get('shortcuturl').split(',') if a.get('shortcuturl') else [],
                  'link': a.get('href')}
                 for a in doc.cssselect('a')]
 
@@ -57,5 +57,5 @@ class CoreAPI:
             next(reader)
             return [{'title' : row[0].decode('utf-8'),
                      'link': row[1].decode('utf-8'),
-                     'tags': row[2].decode('utf-8').split() if row[2] else [] }
+                     'tags': row[2].decode('utf-8').split(',') if row[2] else [] }
                     for row in reader]
